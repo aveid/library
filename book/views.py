@@ -1,9 +1,10 @@
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from book.models import Book
-from book.serializers import BookSerializers
+from book.serializers import BookSerializers, BookUpdateSerializer
 
 
 class BookAPIView(APIView):
@@ -24,6 +25,24 @@ class BookAPIView(APIView):
 class BookDetailUpdateDeleteAPIView(APIView):
 
     def get(self, request, pk):
+        try:
+            book = Book.objects.get(id=pk)
+            serializer = BookSerializers(book)
+            return Response(serializer.data)
+        except Book.DoesNotExist as err:
+            raise ValidationError(
+                {"error": err}
+            )
+
+    def put(self, request, pk):
         book = Book.objects.get(id=pk)
-        serializer = BookSerializers(book)
-        return Response(serializer.data)
+        serializer = BookUpdateSerializer(book, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors)
+
+    def delete(self, request, pk):
+        book = Book.objects.get(id=pk)
+        book.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

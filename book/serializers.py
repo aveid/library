@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
-# class BookSerializers(serializers.Serializer):
-#     title = serializers.CharField()
-#     desc = serializers.CharField()
-#     author = serializers.CharField()
-#     year = serializers.IntegerField()
+class BookSerializers(serializers.Serializer):
+    title = serializers.CharField()
+    desc = serializers.CharField()
+    author = serializers.CharField()
+    year = serializers.IntegerField()
 from book.models import Book, Picture
 
 class PictureSerizlizer(serializers.ModelSerializer):
@@ -29,3 +29,25 @@ class BookSerializers(serializers.ModelSerializer):
                                                            many=True).data
 
         return representation
+
+
+class BookUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = "__all__"
+        extra_kwargs = {"author": {"required": False},
+                        "year": {"required": False},
+                        "title": {"required": False},
+                        "desc": {"required": False},
+                        }
+
+    def update(self, instance, validated_data):
+        instance.year = validated_data.get("year", instance.year)
+        instance.title = validated_data.get("title", instance.title)
+        instance.desc = validated_data.get("desc", instance.desc)
+        instance.author = validated_data.get("author", instance.author)
+        instance.save()
+        return instance
+
+
+
